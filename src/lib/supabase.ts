@@ -12,13 +12,17 @@ function formatSupabaseError(error: unknown): Error {
   return new Error(String(error));
 }
 
+function getSupabaseUrl() {
+  return process.env.NEXT_PUBLIC_SUPABASE_URL!.replace(/\/rest\/v1\/?$/, "").replace(/\/$/, "");
+}
+
 export function getSupabaseAdmin() {
   const setupError = getSetupError();
   if (setupError) {
     throw new Error(setupError);
   }
 
-  return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, {
+  return createClient(getSupabaseUrl(), process.env.SUPABASE_SERVICE_ROLE_KEY!, {
     auth: {
       persistSession: false,
       autoRefreshToken: false
