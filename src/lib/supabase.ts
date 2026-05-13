@@ -2,6 +2,16 @@ import { createClient } from "@supabase/supabase-js";
 import { getSetupError } from "@/lib/env";
 import type { SurveyResponse } from "@/lib/types";
 
+function formatSupabaseError(error: unknown): Error {
+  if (error instanceof Error) return error;
+  if (error && typeof error === "object") {
+    const record = error as Record<string, unknown>;
+    const message = [record.message, record.details, record.hint, record.code].filter(Boolean).join(" | ");
+    return new Error(message || JSON.stringify(error));
+  }
+  return new Error(String(error));
+}
+
 export function getSupabaseAdmin() {
   const setupError = getSetupError();
   if (setupError) {
@@ -34,7 +44,7 @@ export async function insertSurveyResponse(payload: Omit<SurveyResponse, "id" | 
     .select("id")
     .single();
 
-  if (error) throw error;
+  if (error) throw formatSupabaseError(error);
   return data as { id: string };
 }
 
@@ -60,7 +70,7 @@ export async function listSurveyResponses(filters: ResponseFilters = {}) {
   }
 
   const { data, error } = await query;
-  if (error) throw error;
+  if (error) throw formatSupabaseError(error);
   return (data ?? []) as SurveyResponse[];
 }
 
@@ -68,6 +78,6 @@ export async function getSurveyResponse(id: string) {
   const supabase = getSupabaseAdmin();
   const { data, error } = await supabase.from("survey_responses").select("*").eq("id", id).single();
 
-  if (error) throw error;
+  if (error) throw formatSupabaseError(error);
   return data as SurveyResponse;
 }
